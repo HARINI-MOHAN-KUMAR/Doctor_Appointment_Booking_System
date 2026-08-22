@@ -11,34 +11,45 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL
+  const [loading, setLoading] = useState(false)
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
 
   const { setDToken } = useContext(DoctorContext)
   const { setAToken } = useContext(AdminContext)
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+    setLoading(true)
 
-    if (state === 'Admin') {
+    try {
+      if (state === 'Admin') {
 
-      const { data } = await axios.post(backendUrl + '/api/admin/login', { email, password })
-      if (data.success) {
-        setAToken(data.token)
-        localStorage.setItem('aToken', data.token)
+        const { data } = await axios.post(backendUrl + '/api/admin/login', { email, password })
+        if (data.success) {
+          setAToken(data.token)
+          localStorage.setItem('aToken', data.token)
+          toast.success('Admin login successful!')
+        } else {
+          toast.error(data.message)
+        }
+
       } else {
-        toast.error(data.message)
+
+        const { data } = await axios.post(backendUrl + '/api/doctor/login', { email, password })
+        if (data.success) {
+          setDToken(data.token)
+          localStorage.setItem('dToken', data.token)
+          toast.success('Doctor login successful!')
+        } else {
+          toast.error(data.message)
+        }
+
       }
-
-    } else {
-
-      const { data } = await axios.post(backendUrl + '/api/doctor/login', { email, password })
-      if (data.success) {
-        setDToken(data.token)
-        localStorage.setItem('dToken', data.token)
-      } else {
-        toast.error(data.message)
-      }
-
+    } catch (error) {
+      console.log(error)
+      toast.error(error.response?.data?.message || error.message || 'Server connection error. Ensure backend is running.')
+    } finally {
+      setLoading(false)
     }
 
   }
@@ -55,7 +66,9 @@ const Login = () => {
           <p>Password</p>
           <input onChange={(e) => setPassword(e.target.value)} value={password} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="password" required />
         </div>
-        <button className='bg-primary text-white w-full py-2 rounded-md text-base'>Login</button>
+        <button disabled={loading} className='bg-primary text-white w-full py-2 rounded-md text-base disabled:opacity-50 flex justify-center items-center gap-2'>
+          {loading ? 'Logging In...' : 'Login'}
+        </button>
         {
           state === 'Admin'
             ? <p>Doctor Login? <span onClick={() => setState('Doctor')} className='text-primary underline cursor-pointer'>Click here</span></p>

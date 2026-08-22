@@ -65,6 +65,11 @@ const addDoctor = async (req, res) => {
         const { name, email, password, speciality, degree, experience, about, fees, address } = req.body
         const imageFile = req.file
 
+        // checking for image
+        if (!imageFile) {
+            return res.json({ success: false, message: "Doctor image required" })
+        }
+
         // checking for all data to add doctor
         if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address) {
             return res.json({ success: false, message: "Missing Details" })
@@ -137,7 +142,7 @@ const adminDashboard = async (req, res) => {
             doctors: doctors.length,
             appointments: appointments.length,
             patients: users.length,
-            latestAppointments: appointments.reverse()
+            latestAppointments: appointments.slice().reverse()
         }
 
         res.json({ success: true, dashData })

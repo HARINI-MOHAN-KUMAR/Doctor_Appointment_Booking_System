@@ -64,7 +64,7 @@ const Appointment = () => {
                 const slotDate = day + "_" + month + "_" + year
                 const slotTime = formattedTime
 
-                const isSlotAvailable = docInfo.slots_booked[slotDate] && docInfo.slots_booked[slotDate].includes(slotTime) ? false : true
+                const isSlotAvailable = docInfo.slots_booked && docInfo.slots_booked[slotDate] && docInfo.slots_booked[slotDate].includes(slotTime) ? false : true
 
                 if (isSlotAvailable) {
 
@@ -90,6 +90,14 @@ const Appointment = () => {
         if (!token) {
             toast.warning('Login to book appointment')
             return navigate('/login')
+        }
+
+        if (!slotTime) {
+            return toast.warning('Please select a time slot for your appointment')
+        }
+
+        if (!docSlots[slotIndex] || !docSlots[slotIndex].length || !docSlots[slotIndex][0]) {
+            return toast.warning('No available slots for this date')
         }
 
         const date = docSlots[slotIndex][0].datetime
@@ -172,7 +180,7 @@ const Appointment = () => {
                 </div>
 
                 <div className='flex items-center gap-3 w-full overflow-x-scroll mt-4'>
-                    {docSlots.length && docSlots[slotIndex].map((item, index) => (
+                    {docSlots.length > 0 && docSlots[slotIndex] && docSlots[slotIndex].map((item, index) => (
                         <p onClick={() => setSlotTime(item.time)} key={index} className={`text-sm font-light  flex-shrink-0 px-5 py-2 rounded-full cursor-pointer ${item.time === slotTime ? 'bg-primary text-white' : 'text-[#949494] border border-[#B4B4B4]'}`}>{item.time.toLowerCase()}</p>
                     ))}
                 </div>

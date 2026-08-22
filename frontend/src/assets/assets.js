@@ -296,4 +296,32 @@ export const doctors = [
             line2: 'Circle, Ring Road, London'
         }
     },
+    {
+        _id: 'doc16',
+        name: 'Dr. Robert Chen',
+        image: doc1,
+        speciality: 'Gastroenterologist',
+        degree: 'MBBS, MD',
+        experience: '5 Years',
+        about: 'Dr. Robert Chen is a leading gastroenterologist specializing in digestive system health, liver diseases, endoscopy, and nutritional management.',
+        fees: 70,
+        address: {
+            line1: '67th Cross, Richmond',
+            line2: 'Circle, Ring Road, London'
+        }
+    },
+    {
+        _id: 'doc17',
+        name: 'Dr. Sophia Taylor',
+        image: doc2,
+        speciality: 'Gastroenterologist',
+        degree: 'MBBS, FRCP',
+        experience: '6 Years',
+        about: 'Dr. Sophia Taylor specializes in advanced gastroenterology, IBS management, gastric disorder management, and endoscopic care.',
+        fees: 80,
+        address: {
+            line1: '67th Cross, Richmond',
+            line2: 'Circle, Ring Road, London'
+        }
+    }
 ]

@@ -19,13 +19,29 @@ connectCloudinary();
 
 // middlewares
 app.use(express.json());
+
+// Build allowed origins from environment variables
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:5174",
+];
+if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
+if (process.env.ADMIN_URL) allowedOrigins.push(process.env.ADMIN_URL);
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:5173",
-      "https://YOUR-ADMIN-FRONTEND.vercel.app" // 🔴 replace after admin deploy
-    ],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.includes('localhost')
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   })
@@ -45,3 +61,5 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`Server started on PORT:${port}`);
 });
+
+export default app;

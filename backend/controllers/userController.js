@@ -9,11 +9,15 @@ import stripe from "stripe";
 import razorpay from 'razorpay';
 
 // Gateway Initialize
-const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY)
-const razorpayInstance = new razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-})
+const getStripeInstance = () => {
+    return new stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key');
+}
+const getRazorpayInstance = () => {
+    return new razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID || 'dummy_id',
+        key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy_secret',
+    });
+}
 
 // API to register user
 const registerUser = async (req, res) => {
@@ -31,9 +35,15 @@ const registerUser = async (req, res) => {
             return res.json({ success: false, message: "Please enter a valid email" })
         }
 
-        // validating strong password
-        if (password.length < 8) {
-            return res.json({ success: false, message: "Please enter a strong password" })
+        // check if user already exists
+        const exists = await userModel.findOne({ email })
+        if (exists) {
+            return res.json({ success: false, message: "An account with this email already exists" })
+        }
+
+        // validating password
+        if (password.length < 4) {
+            return res.json({ success: false, message: "Please enter a password with at least 4 characters" })
         }
 
         // hashing user password
@@ -159,13 +169,14 @@ const bookAppointment = async (req, res) => {
 
         const userData = await userModel.findById(userId).select("-password")
 
-        delete docData.slots_booked
+        const docDataObj = docData.toObject()
+        delete docDataObj.slots_booked
 
         const appointmentData = {
             userId,
             docId,
             userData,
-            docData,
+            docData: docDataObj,
             amount: docData.fees,
             slotTime,
             slotDate,
@@ -254,6 +265,7 @@ const paymentRazorpay = async (req, res) => {
         }
 
         // creation of an order
+        const razorpayInstance = getRazorpayInstance()
         const order = await razorpayInstance.orders.create(options)
 
         res.json({ success: true, order })
@@ -268,6 +280,7 @@ const paymentRazorpay = async (req, res) => {
 const verifyRazorpay = async (req, res) => {
     try {
         const { razorpay_order_id } = req.body
+        const razorpayInstance = getRazorpayInstance()
         const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id)
 
         if (orderInfo.status === 'paid') {
@@ -309,6 +322,7 @@ const paymentStripe = async (req, res) => {
             quantity: 1
         }]
 
+        const stripeInstance = getStripeInstance()
         const session = await stripeInstance.checkout.sessions.create({
             success_url: `${origin}/verify?success=true&appointmentId=${appointmentData._id}`,
             cancel_url: `${origin}/verify?success=false&appointmentId=${appointmentData._id}`,

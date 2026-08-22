@@ -17,8 +17,9 @@ const MyAppointments = () => {
 
     // Function to format the date eg. ( 20_01_2000 => 20 Jan 2000 )
     const slotDateFormat = (slotDate) => {
+        if (!slotDate) return ''
         const dateArray = slotDate.split('_')
-        return dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2]
+        return dateArray[0] + " " + months[Number(dateArray[1]) - 1] + " " + dateArray[2]
     }
 
     // Getting User Appointments Data Using API
@@ -26,7 +27,11 @@ const MyAppointments = () => {
         try {
 
             const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { token } })
-            setAppointments(data.appointments.reverse())
+            if (data.success) {
+                setAppointments(data.appointments.reverse())
+            } else {
+                toast.error(data.message)
+            }
 
         } catch (error) {
             console.log(error)

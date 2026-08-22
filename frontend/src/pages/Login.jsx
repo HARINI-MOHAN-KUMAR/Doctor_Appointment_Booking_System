@@ -12,34 +12,51 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
+  const [loading, setLoading] = useState(false)
+
   const navigate = useNavigate()
-  const { backendUrl, token, setToken } = useContext(AppContext)
+  const { backendUrl: ctxBackendUrl, token, setToken } = useContext(AppContext)
+  const backendUrl = ctxBackendUrl || import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
-    if (state === 'Sign Up') {
+    if (state === 'Sign Up' && password.length < 4) {
+      return toast.warning('Password must be at least 4 characters long')
+    }
 
-      const { data } = await axios.post(backendUrl + '/api/user/register', { name, email, password })
+    setLoading(true)
+    try {
+      if (state === 'Sign Up') {
 
-      if (data.success) {
-        localStorage.setItem('token', data.token)
-        setToken(data.token)
+        const { data } = await axios.post(backendUrl + '/api/user/register', { name, email, password })
+
+        if (data.success) {
+          localStorage.setItem('token', data.token)
+          setToken(data.token)
+          toast.success('Account created successfully!')
+        } else {
+          toast.error(data.message)
+        }
+
       } else {
-        toast.error(data.message)
+
+        const { data } = await axios.post(backendUrl + '/api/user/login', { email, password })
+
+        if (data.success) {
+          localStorage.setItem('token', data.token)
+          setToken(data.token)
+          toast.success('Logged in successfully!')
+        } else {
+          toast.error(data.message)
+        }
+
       }
-
-    } else {
-
-      const { data } = await axios.post(backendUrl + '/api/user/login', { email, password })
-
-      if (data.success) {
-        localStorage.setItem('token', data.token)
-        setToken(data.token)
-      } else {
-        toast.error(data.message)
-      }
-
+    } catch (error) {
+      console.log(error)
+      toast.error(error.response?.data?.message || error.message || 'Server connection error. Ensure backend is running.')
+    } finally {
+      setLoading(false)
     }
 
   }
@@ -68,9 +85,12 @@ const Login = () => {
         </div>
         <div className='w-full '>
           <p>Password</p>
-          <input onChange={(e) => setPassword(e.target.value)} value={password} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="password" required />
+          <input onChange={(e) => setPassword(e.target.value)} value={password} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="password" minLength={4} required />
+          <p className='text-xs text-gray-400 mt-1'>Minimum 4 characters</p>
         </div>
-        <button className='bg-primary text-white w-full py-2 my-2 rounded-md text-base'>{state === 'Sign Up' ? 'Create account' : 'Login'}</button>
+        <button disabled={loading} className='bg-primary text-white w-full py-2 my-2 rounded-md text-base disabled:opacity-50 flex justify-center items-center gap-2'>
+          {loading ? (state === 'Sign Up' ? 'Creating Account...' : 'Logging In...') : (state === 'Sign Up' ? 'Create account' : 'Login')}
+        </button>
         {state === 'Sign Up'
           ? <p>Already have an account? <span onClick={() => setState('Login')} className='text-primary underline cursor-pointer'>Login here</span></p>
           : <p>Create an new account? <span onClick={() => setState('Sign Up')} className='text-primary underline cursor-pointer'>Click here</span></p>
